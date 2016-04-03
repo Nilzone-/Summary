@@ -1,30 +1,46 @@
 var stopwords   = require('stopwords').english;
 var natural     = require('natural');
-var texts       = require('./texts.js');
-
+    
 function Summary(text) {
     
-	if (typeof text  !== 'string') throw new Error("Argument must be a string");
+	if (typeof text !== 'string') throw new Error("Argument must be a string");
 	
-    this.text = text
+    this.text = text;
 	this.sentences = [];
     this.sentencesScore = {};
-	this.wordPoints = {};
+	this.wordCount = {};
 }
+
+function isStopWord(word) {
+    return stopwords.indexOf(word.toLowerCase()) < 0 && word.length > 1;
+}
+
+function setBaseWord(word) {
+    return natural.PorterStemmer.stem(word); 
+}
+
+function modify(sentence) {
+    
+    return sentence.replace(/[:.,?!\'\/\"]+/g, ' ')
+                   .split(/\s+/)
+                   .filter(isStopWord)
+                   .map(setBaseWord)
+}
+
+
+function init(text) {
+    return new Summary(text);
+}
+
 
 Summary.prototype.wordFrequency = function () {
     
-    
-	return this.text.replace(/[:.,?!\'\/\"]+/g, ' ')
-                    .split(/\s+/)
-                    .filter(word => { return stopwords.indexOf(word.toLowerCase()) < 0 && word.length > 3; })
-                    .map(word => { return natural.PorterStemmer.stem(word); })
-                    .reduce(function(map, word) {
-                    
-                        map[word] = (map[word] || 0) + 1;
-                        return map;
+	return modify(this.text).reduce(function(map, word) {
 
-                     }, this.wordPoints)
+        map[word] = (map[word] || 0) + 1;
+        return map;
+
+     }, this.wordCount);
 }
 
 
@@ -34,48 +50,43 @@ Summary.prototype.splitTextIntoSentences = function () {
     return this.sentences;
 }
 
-Summary.prototype.rankSentences = function () {
-	for(var i = 0, count = 0; i < this.sentences.length; i++) {
+
+Summary.prototype.rankSentences = function() {
+    
+    for(var i = 0; i < this.sentences.length; i++) {
         var sentence = this.sentences[i];
+        var count = 0;
         
         sentence = sentence.replace(/[\w\s,']*"[\w\s.,'"]+./g, '');
         
-        sentence.replace(/[:.,?!\'\/\"]+/g, ' ')
-                .split(/\s+/)
-                .filter(word => { return stopwords.indexOf(word.toLowerCase()) < 0 && word.length > 3; })
-                .map(word => { return natural.PorterStemmer.stem(word); })
-                .forEach(word => {
-                    var wordPoint = this.wordPoints[word] || 0;
-                    var point = (wordPoint <= 1) ? 0 : wordPoint;
-                    count += point || 0;
-                 });
+        
+        modify(sentence).forEach(word => {
+            console.log(word);
+            count += Math.pow(this.wordCount[word], 2) || 0;
+        });
     
         this.sentencesScore[sentence] = count; 
-        count = 0;
     }
-    
 }
 
-Summary.prototype.printMostValuable = function() {
+Summary.prototype.makeSummary = function() {
+    
+    this.wordFrequency();
+    this.splitTextIntoSentences();
+    this.rankSentences();
+    
     var sortable = [];
     
     for (var sentence in this.sentencesScore) {
         sortable.push([sentence, this.sentencesScore[sentence]])
     }
-    sortable.sort(function(a, b) {return b[1] - a[1]});
+    var result = sortable.sort(function(a, b) {return b[1] - a[1]});
+                         //.reduce((a, b) => {return a.concat(b[0]);}, []);
     
-    console.log(sortable);
+    return result;
 }
 
 
 
 
-var text = texts[0];
-
-var s = new Summary(text);
-
-s.wordFrequency();
-s.splitTextIntoSentences();
-s.rankSentences();  
-
-s.printMostValuable();
+module.exports = init;
