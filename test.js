@@ -1,8 +1,8 @@
-var Summary     = require('./summary.js');
 var texts       = require('./texts.js');
+var s           = require('./summary.js')(texts[1]);
 
 
 
-var s = new Summary(texts[0]);
 
-s.makeSummary();
+var summary = s.makeSummary();
+console.log(summary);

@@ -8,7 +8,7 @@ function Summary(text) {
     this.text = text;
 	this.sentences = [];
     this.sentencesScore = {};
-	this.wordPoints = {};
+	this.wordCount = {};
 }
 
 function isStopWord(word) {
@@ -24,7 +24,12 @@ function modify(sentence) {
     return sentence.replace(/[:.,?!\'\/\"]+/g, ' ')
                    .split(/\s+/)
                    .filter(isStopWord)
-                   .map(setBaseWord);
+                   .map(setBaseWord)
+}
+
+
+function init(text) {
+    return new Summary(text);
 }
 
 
@@ -35,7 +40,7 @@ Summary.prototype.wordFrequency = function () {
         map[word] = (map[word] || 0) + 1;
         return map;
 
-     }, this.wordPoints);
+     }, this.wordCount);
 }
 
 
@@ -56,7 +61,8 @@ Summary.prototype.rankSentences = function() {
         
         
         modify(sentence).forEach(word => {
-            count += Math.pow(this.wordPoints[word], 2) || 0;
+            console.log(word);
+            count += Math.pow(this.wordCount[word], 2) || 0;
         });
     
         this.sentencesScore[sentence] = count; 
@@ -74,13 +80,13 @@ Summary.prototype.makeSummary = function() {
     for (var sentence in this.sentencesScore) {
         sortable.push([sentence, this.sentencesScore[sentence]])
     }
-    var result = sortable.sort(function(a, b) {return b[1] - a[1]})
-                         .reduce((a, b) => {return a.concat(b[0]);}, []);
+    var result = sortable.sort(function(a, b) {return b[1] - a[1]});
+                         //.reduce((a, b) => {return a.concat(b[0]);}, []);
     
-    console.log(result);
+    return result;
 }
 
 
 
 
-module.exports = Summary;
+module.exports = init;
