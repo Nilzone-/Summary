@@ -1,6 +1,5 @@
 var stopwords   = require('stopwords').english;
 var natural     = require('natural');
-var texts       = require('./texts.js');
     
 function Summary(text) {
     
@@ -21,14 +20,16 @@ function setBaseWord(word) {
 }
 
 function modify(sentence) {
+    
     return sentence.replace(/[:.,?!\'\/\"]+/g, ' ')
                    .split(/\s+/)
                    .filter(isStopWord)
                    .map(setBaseWord);
 }
 
+
 Summary.prototype.wordFrequency = function () {
-       
+    
 	return modify(this.text).reduce(function(map, word) {
 
         map[word] = (map[word] || 0) + 1;
@@ -44,9 +45,10 @@ Summary.prototype.splitTextIntoSentences = function () {
     return this.sentences;
 }
 
-Summary.prototype.rankSentences = function () {
+
+Summary.prototype.rankSentences = function() {
     
-	for(var i = 0; i < this.sentences.length; i++) {
+    for(var i = 0; i < this.sentences.length; i++) {
         var sentence = this.sentences[i];
         var count = 0;
         
@@ -59,10 +61,14 @@ Summary.prototype.rankSentences = function () {
     
         this.sentencesScore[sentence] = count; 
     }
-    
 }
 
-Summary.prototype.printMostValuable = function() {
+Summary.prototype.makeSummary = function() {
+    
+    this.wordFrequency();
+    this.splitTextIntoSentences();
+    this.rankSentences();
+    
     var sortable = [];
     
     for (var sentence in this.sentencesScore) {
@@ -77,13 +83,4 @@ Summary.prototype.printMostValuable = function() {
 
 
 
-var text = texts[0];
-
-var s = new Summary(text);
-
-console.log(s.wordFrequency());
-s.splitTextIntoSentences();
-s.rankSentences();  
-
-s.printMostValuable();
-
+module.exports = Summary;
