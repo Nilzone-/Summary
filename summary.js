@@ -4,16 +4,16 @@ var texts       = require('./texts.js');
     
 function Summary(text) {
     
-	if (typeof text  !== 'string') throw new Error("Argument must be a string");
+	if (typeof text !== 'string') throw new Error("Argument must be a string");
 	
-    this.text = text
+    this.text = text;
 	this.sentences = [];
     this.sentencesScore = {};
 	this.wordPoints = {};
 }
 
 function isStopWord(word) {
-    return stopwords.indexOf(word.toLowerCase()) < 0;
+    return stopwords.indexOf(word.toLowerCase()) < 0 && word.length > 1;
 }
 
 function setBaseWord(word) {
@@ -68,8 +68,10 @@ Summary.prototype.printMostValuable = function() {
     for (var sentence in this.sentencesScore) {
         sortable.push([sentence, this.sentencesScore[sentence]])
     }
-    sortable.sort(function(a, b) {return b[1] - a[1]});//.reduce((a, b) => {return a.concat(b[0]);}, [])
-    console.log(sortable);
+    var result = sortable.sort(function(a, b) {return b[1] - a[1]})
+                         .reduce((a, b) => {return a.concat(b[0]);}, []);
+    
+    console.log(result);
 }
 
 
@@ -84,3 +86,4 @@ s.splitTextIntoSentences();
 s.rankSentences();  
 
 s.printMostValuable();
+
